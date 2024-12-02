@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -31,51 +32,6 @@ func readFile(filepath string) []string {
 	return text
 }
 
-func test(slice []int) {
-  slice[0] = 200
-}
-
-func main() {
-	var inputText []string = readFile("day2/input.test")
-	var reports [][]int
-  var safeReports int
-
-  // get all the reports to int slices
-	for _, line := range inputText {
-		var rawNumbers []string = strings.Fields(line)
-		reports = append(reports, convertReport(rawNumbers))
-	}
-
-  // make a copy of the reports, to pass to the second part
-  // because golang passes slices as references by default
-  reportsCopy := make([][]int, len(reports))
-  for i := range reports {
-      reportsCopy[i] = make([]int, len(reports[i]))
-      copy(reportsCopy[i], reports[i])
-  }
-  fmt.Println(reportsCopy)
-
-  // validate the reports (part 1)
-  for _, report := range reports {
-    if (!isReportSafe(report, 0)) {
-      continue
-    }
-    safeReports += 1
-  }
-  fmt.Printf("Safe reports: %v\n", safeReports)
-
-  safeReports = 0
-  // include damper of 1 (part 2)
-  for index, report := range reportsCopy {
-    fmt.Println("=== Report #", index, "===")
-    if (!isReportSafe(report, 1)) {
-      continue
-    }
-    safeReports += 1
-  }
-  fmt.Printf("Safe reports (dampened): %v\n", safeReports)
-}
-
 func convertReport(strSlice []string) []int {
 	var convertedNumbers []int
 
@@ -90,14 +46,40 @@ func convertReport(strSlice []string) []int {
 	return convertedNumbers
 }
 
-func isReportSafe(report []int, damperValue int) bool {
-  fmt.Println("report:", report)
+func main() {
+	var inputText []string = readFile("day2/input")
+	var reports [][]int
+  var safeReports int
+
+  // get all the reports to int slices
+	for _, line := range inputText {
+		var rawNumbers []string = strings.Fields(line)
+		reports = append(reports, convertReport(rawNumbers))
+	}
+
+  // validate the reports (part 1)
+  // make a copy of the reports, to pass to the second part
+  // because golang passes slices as references by default
+  for _, report := range slices.Clone(reports) {
+    if (isReportSafe(report)) {
+      safeReports += 1
+    }
+  }
+  fmt.Printf("Safe reports: %v\n", safeReports)
+
+  safeReports = 0
+  // include damper of 1 (part 2)
+  for _, report := range slices.Clone(reports) {
+    if (checkReportWithDampening(report)) {
+      safeReports += 1
+    }
+  }
+  fmt.Printf("Safe reports (dampened): %v\n", safeReports)
+}
+
+func isReportSafe(report []int) bool {
   var previousLevel int
   var isIncreasing bool
-  if (damperValue < 0) {
-    fmt.Println("damper limit reached")
-    return false
-  }
 
   for index, level := range report {
     // initialize
@@ -112,30 +94,42 @@ func isReportSafe(report []int, damperValue int) bool {
 
     // is the increase/decrease continuing
     if (isIncreasing && previousLevel > level) {
-      // fmt.Println("increase did not continue")
-      // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
-      return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
+      return false
     }
     if (!isIncreasing && previousLevel < level) {
-      // fmt.Println("decrease did not continue")
-      // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
-      return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
+      return false
     }
 
     var difference int = int(math.Abs(float64(level - previousLevel)))
 
     // check for valid change range
     if (difference < 1 || difference > 3) {
-      // fmt.Printf("change rate is not valid: abs(%v - %v) = %v\n", level, previousLevel, difference)
-      // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
-      return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
+      return false
     }
 
     // remember to update the previous level (I forgor and was confused)
     previousLevel = level
   }
 	return true
+}
+
+func checkReportWithDampening(report []int) bool {
+  if (isReportSafe(report)) {
+    return true
+  }
+
+  // try removing one level and checking if the report becomes safe
+  for index, _ := range report {
+    var reportWithoutCurrentValue []int = removeIndexFromSlice(report, index)
+    if (isReportSafe(reportWithoutCurrentValue)) {
+      return true
+    }
+  }
+  return false
+}
+
+func removeIndexFromSlice(slice []int, index int) []int {
+    reportWithoutCurrentValue := make([]int, 0)
+    reportWithoutCurrentValue = append(reportWithoutCurrentValue, slice[:index]...)
+    return append(reportWithoutCurrentValue, slice[index+1:]...)
 }
