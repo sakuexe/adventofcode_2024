@@ -27,3 +27,11 @@ using a lot of C# in school and Javascript at work.
 
 > [!NOTE]
 > This is my first advent of code, so proceed at your own risk.
+
+## Heads up
+
+Due to the license of Advent of Code, I cannot include inputs or the puzzle
+texts in this repo. So please visit the AoC website to get those. The code 
+expects the inputs to be in files located in `day[number]/input`.
+
+Source: [About - Advent of Code](https://adventofcode.com/about#faq_copying)
