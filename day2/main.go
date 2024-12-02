@@ -114,13 +114,13 @@ func isReportSafe(report []int, damperValue int) bool {
     if (isIncreasing && previousLevel > level) {
       // fmt.Println("increase did not continue")
       // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index - 1], report[index:]...)
+      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
       return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
     }
     if (!isIncreasing && previousLevel < level) {
       // fmt.Println("decrease did not continue")
       // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index - 1], report[index:]...)
+      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
       return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
     }
 
@@ -130,7 +130,7 @@ func isReportSafe(report []int, damperValue int) bool {
     if (difference < 1 || difference > 3) {
       // fmt.Printf("change rate is not valid: abs(%v - %v) = %v\n", level, previousLevel, difference)
       // fmt.Println("level:", level, "previous:", previousLevel)
-      var reportWithoutCurrentValue []int = append(report[:index - 1], report[index:]...)
+      var reportWithoutCurrentValue []int = append(report[:index], report[index+1:]...)
       return isReportSafe(reportWithoutCurrentValue, damperValue - 1)
     }
 
