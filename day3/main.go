@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func readFile(filepath string) []string {
@@ -32,30 +33,86 @@ func readFile(filepath string) []string {
 
 func main() {
 	textInput := readFile("day3/input")
+	// part 1
 	instructions := getValidInstructions(textInput)
-  // part 1
 	result := applyInstructions(instructions)
+	fmt.Println(result)
+	// part 2
+	instructions = getValidConditionalInstructions(textInput)
+	result = applyInstructions(instructions)
 	fmt.Println(result)
 }
 
-func getValidInstructions(memoryValues []string) [][]string {
-	validInstructions := [][]string{}
-	for _, memory := range memoryValues {
-		filterExpression, err := regexp.Compile(`mul\(\d+\,\d+\)`)
-		if err != nil {
-			panic("error trying to compile regular expression")
-		}
+func getValidInstructions(memoryValues []string) []string {
+	validInstructions := []string{}
+	parsedMatches := [][]string{}
 
+	filterExpression, err := regexp.Compile(`(mul\(\d+\,\d+\))`)
+	if err != nil {
+		panic("error trying to compile regular expression")
+	}
+
+  // find all the matches to the regex
+	for _, memory := range memoryValues {
 		matches := filterExpression.FindAllStringSubmatch(memory, -1)
 		if matches == nil {
 			panic("did not find any matches for regex in input")
 		}
-    validInstructions = append(validInstructions, matches...)
+		parsedMatches = append(parsedMatches, matches...)
+	}
+
+  // turn the 2D slice into a normal slice
+	for _, match := range parsedMatches {
+		instruction := strings.ToLower(strings.TrimSpace(match[0]))
+		validInstructions = append(validInstructions, instruction)
 	}
 	return validInstructions
 }
 
-func applyInstructions(instructions [][]string) int {
+func getValidConditionalInstructions(memoryValues []string) []string {
+	parsedMatches := [][]string{}
+
+  // group all the possible matches inside ()
+	filterExpression, err := regexp.Compile(`(?P<Mul>mul\(\d+\,\d+\))|(?P<Do>do\(\))|(?P<Dont>don\'t\(\))`)
+	if err != nil {
+		panic("error trying to compile regular expression")
+	}
+
+  // find all the matches
+	for _, memory := range memoryValues {
+		matches := filterExpression.FindAllStringSubmatch(memory, -1)
+		if matches == nil {
+			panic("did not find any matches for regex in input")
+		}
+		parsedMatches = append(parsedMatches, matches...)
+	}
+
+	// remove the ones that are after dont() blocks
+	validInstructions := []string{}
+
+  isEnabled := true
+	for _, match := range parsedMatches {
+		instruction := strings.ToLower(strings.TrimSpace(match[0]))
+
+		if instruction == "don't()" {
+      isEnabled = false
+      continue
+		} else if instruction == "do()" {
+      isEnabled = true
+      continue
+		}
+
+    if !isEnabled {
+      continue
+    }
+
+		validInstructions = append(validInstructions, instruction)
+	}
+
+	return validInstructions
+}
+
+func applyInstructions(instructions []string) int {
 	var sum int
 
 	for _, match := range instructions {
@@ -66,7 +123,7 @@ func applyInstructions(instructions [][]string) int {
 		}
 
 		// get the numbers being applied
-		parameters := numberExpression.FindStringSubmatch(match[0])
+		parameters := numberExpression.FindStringSubmatch(match)
 		firstGroup, secondGroup := numberExpression.SubexpIndex("FirstValue"), numberExpression.SubexpIndex("SecondValue")
 
 		// convert string values to int
