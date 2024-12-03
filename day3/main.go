@@ -7,7 +7,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+  // "sakuexe/adventofcode2024/utils"
 )
+
 
 func readFile(filepath string) []string {
 	inputFile, err := os.Open(filepath)
