@@ -1,35 +1,41 @@
 package utils
 
-import "math"
+// https://www.geeksforgeeks.org/rotate-a-matrix-by-90-degree-in-clockwise-direction-without-using-any-extra-space/
+func RotateMatrix90Deg(originalMatrix [][]rune) [][]rune {
 
-// rotates the matrix in place
-// https://github.com/amarjitdhillon/CP_2021/tree/master/48-rotate-image
-func RotateMatrix90Deg(matrix [][]rune) [][]rune {
-
-  // first transformation is for all the rows and half of the elements lying to right hand side fo diagonal
-  for r, _ := range matrix {
-    for c := r; c < len(matrix[0]); c++ {
-      matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
-    }
+  // make a deep copy
+  matrix := make([][]rune, len(originalMatrix))
+  for i := range originalMatrix {
+    matrix[i] = make([]rune, len(originalMatrix[i]))
   }
 
-  // second transformation for all the remaining rows
-  for r, _ := range matrix {
-    // looks weird, but does the same as // division in python
-    for c := r; c < int(math.Floor(float64(len(matrix[0])) / 2)); c++ {
-      matrix[r][c], matrix[r][len(matrix[0]) - c - 1] = matrix[r][len(matrix[0]) - c - 1], matrix[r][c]
+  for i := range len(originalMatrix) {
+    for j := range len(originalMatrix[i]) {
+      matrix[j][len(originalMatrix) - i - 1] = originalMatrix[i][j]
     }
   }
 
   return matrix
 }
 
-// rotates the matrix in place
 func RotateMatrix45Deg(matrix [][]rune) [][]rune {
+  rows := len(matrix)
+  cols := len(matrix[0])
+  rotatedMatrix := [][]rune{}
 
-  counter := 0
-  for counter < 2 * len(matrix[0]) - 1 {
+  // walk through the matrix diagonally
+  // https://www.geeksforgeeks.org/zigzag-or-diagonal-traversal-of-matrix/
+  for line := range rows + cols {
+
+    rotatedMatrix = append(rotatedMatrix, []rune{})
+    start_col := max(0, line - rows)
+    elements := min(line, (cols - start_col), rows)
+
+    for j := range elements {
+      character := matrix[min(rows, line) - j - 1][start_col + j]
+      rotatedMatrix[line] = append(rotatedMatrix[line], character)
+    }
   }
 
-  return matrix
+  return rotatedMatrix
 }
