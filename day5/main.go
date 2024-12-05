@@ -41,10 +41,11 @@ func splitOrdersFromUpdates(input []string) (map[int][]int, [][]int) {
 }
 
 func main() {
-  inputValue := utils.ReadFile("day5/input")
+  inputValue := utils.ReadFile("day5/input.test")
 
   orders, updates := splitOrdersFromUpdates(inputValue)
 
+  // part 1
   result := getValidUpdates(orders, updates)
   fmt.Println(result)
 }
@@ -77,10 +78,44 @@ func getValidUpdates(orders map[int][]int, updates [][]int) int {
     }
 
     if isInvalid {
+      fmt.Println("old order:", update)
+      fmt.Println("new order:", reorderUpdate(orders, update))
       continue
     }
     score += update[len(update) / 2]
   }
 
   return score
+}
+
+func reorderUpdate(orders map[int][]int, update []int) []int {
+  // keeps track of the value and it's index inside the update
+  seenValues := map[int]int{}
+
+  for index, page := range update {
+    seenValues[page] = index
+    // update does not have requirements
+    if orders[page] == nil {
+      continue
+    }
+
+    for _, lastValue := range orders[page] {
+      // if the requirement is not seen
+      if _, ok := seenValues[lastValue]; !ok {
+        continue
+      }
+      requirementIndex := seenValues[lastValue]
+      beforeValue := update[requirementIndex]
+
+      // get the values before the value that we want to get in front of
+      newUpdateOrder := append(update[:requirementIndex], page)
+      // place the old value after the current one
+      newUpdateOrder = append(newUpdateOrder, beforeValue)
+      // fill in the rest
+      newUpdateOrder = append(newUpdateOrder, update[index+1:]...)
+      // re-validate the order
+      reorderUpdate(orders, newUpdateOrder)
+    }
+  }
+  return update
 }
