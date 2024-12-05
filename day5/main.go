@@ -48,6 +48,19 @@ func main() {
   // part 1
   result := getValidUpdates(orders, updates)
   fmt.Println(result)
+
+  // part 2
+  result = 0
+  for _, update := range updates {
+    originalUpdate := make([]int, len(update))
+    copy(originalUpdate, update)
+
+    fmt.Println(originalUpdate)
+    reorderUpdate(orders, update)
+    fmt.Println(update)
+  }
+
+  fmt.Println(result)
 }
 
 func getValidUpdates(orders map[int][]int, updates [][]int) int {
@@ -78,8 +91,6 @@ func getValidUpdates(orders map[int][]int, updates [][]int) int {
     }
 
     if isInvalid {
-      fmt.Println("old order:", update)
-      fmt.Println("new order:", reorderUpdate(orders, update))
       continue
     }
     score += update[len(update) / 2]
@@ -107,14 +118,21 @@ func reorderUpdate(orders map[int][]int, update []int) []int {
       requirementIndex := seenValues[lastValue]
       beforeValue := update[requirementIndex]
 
+      newUpdateOrder := make([]int, 0)
+
       // get the values before the value that we want to get in front of
-      newUpdateOrder := append(update[:requirementIndex], page)
+      newUpdateOrder = append(update[:requirementIndex], page)
       // place the old value after the current one
       newUpdateOrder = append(newUpdateOrder, beforeValue)
       // fill in the rest
       newUpdateOrder = append(newUpdateOrder, update[index+1:]...)
+
       // re-validate the order
       reorderUpdate(orders, newUpdateOrder)
+
+      if (getValidUpdates(orders, [][]int{update}) > 0) {
+        return update
+      }
     }
   }
   return update
